@@ -5,7 +5,7 @@ import uuid
 
 app = Flask(__name__)
 CORS(app)
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Route to generate a unique meeting link
 @app.route('/api/create-meeting', methods=['POST'])
@@ -18,8 +18,19 @@ def create_meeting():
 @socketio.on('join')
 def handle_join(data):
     meeting_id = data['meeting_id']
+    username = data['username']
     join_room(meeting_id)
-    emit('user_joined', {'message': f'User joined meeting {meeting_id}'}, room=meeting_id)
+    print(f'User {username} joined meeting {meeting_id}')
+    emit('user_joined', {'message': f'User {username} joined meeting {meeting_id}'}, room=meeting_id)
+
+# Handle chat messages
+@socketio.on('chat_message')
+def handle_chat_message(data):
+    meeting_id = data['meeting_id']
+    sender = data['sender']
+    message = data['text']
+    print(f'Chat message in meeting {meeting_id} from {sender}: {message}')
+    emit('chat_message', {'sender': sender, 'text': message}, room=meeting_id)
 
 # when user sends SDP
 @socketio.on('offer')
