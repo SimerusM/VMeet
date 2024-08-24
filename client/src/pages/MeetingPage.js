@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Button from '../components/Button';
+import io from 'socket.io-client';
+
+const SOCKET_SERVER_URL = 'http://127.0.0.1:5000';
 
 const MeetingPage = () => {
   const { id } = useParams();
@@ -8,6 +11,7 @@ const MeetingPage = () => {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     console.log(`Joining meeting with ID: ${id}`);
@@ -23,6 +27,26 @@ const MeetingPage = () => {
       setNewMessage('');
     }
   };
+
+  useEffect(() => {
+    const newSocket = io(SOCKET_SERVER_URL);
+    setSocket(newSocket);
+
+    return () => newSocket.close();
+  }, []);
+
+  useEffect(() => {
+    if (socket == null) return;
+
+    socket.on('connect', () => {
+      console.log('Connected to server');
+      socket.emit('join', { meeting_id: id });
+    });
+
+    return () => {
+      socket.off('join');
+    };
+  }, [socket]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">

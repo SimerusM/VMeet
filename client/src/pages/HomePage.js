@@ -18,7 +18,6 @@ const HomePage = () => {
       method: 'POST',
     });
     const generatedCode = (await response.json()).meeting_id;
-    console.log(generatedCode);
     navigate(`/meet/${generatedCode}`);
   };
 
