@@ -14,7 +14,10 @@ const HomePage = () => {
   };
 
   const handleCreateMeet = async () => {
-    const generatedCode = (await fetch('http://127.0.0.1:5000/api/create-meeting')).meeting_id;
+    const response = await fetch('http://127.0.0.1:5000/api/create-meeting', {
+      method: 'POST',
+    });
+    const generatedCode = (await response.json()).meeting_id;
     console.log(generatedCode);
     navigate(`/meet/${generatedCode}`);
   };
