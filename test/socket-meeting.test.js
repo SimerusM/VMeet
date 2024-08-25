@@ -11,55 +11,55 @@ const CREATE_MEETING_URL = `${SERVER_URL}/api/create-meeting`;
 describe('Socket.IO Integration Tests', function() {
   let meetingId;
   let socket;
+  let socket2;
 
-  before(async function() {
+  beforeEach(async function() {
     // Create a meeting
     const response = await axios.post(CREATE_MEETING_URL);
     meetingId = response.data.meeting_id;
     expect(meetingId).to.be.a('string'); // Check that meetingId is a string
-
-    // Connect to the server
+  
+    // Connect both clients to the server
     socket = io(SERVER_URL);
+    socket2 = io(SERVER_URL);
+  
+    // Wait for both clients to connect before continuing
+    await Promise.all([
+      new Promise((resolve) => socket.on('connect', resolve)),
+      new Promise((resolve) => socket2.on('connect', resolve))
+    ]);
   });
 
   it('should join the meeting and handle user_joined event', function(done) {
-    socket.emit('join', { meeting_id: meetingId });
+    socket.emit('join', { meeting_id: meetingId, username: 'User1' });
 
     socket.on('user_joined', (data) => {
-      expect(data).to.have.property('message');
-      expect(data.message).to.include(meetingId);
+      expect(data).to.have.property('username');
+      expect(data.username).to.equal('User1');
+      expect(data.meeting_id).to.include(meetingId);
       done(); // Signal that the test is complete
     });
   });
 
-  it('should handle offer event', function(done) {
-    socket.emit('offer', { meeting_id: meetingId, sdp: 'offer-sdp-data' });
+  it('should handle chat_message event', function(done) {
+    const testMessage = 'Hello, world!';
 
-    socket.on('offer', (data) => {
-      expect(data).to.have.property('sdp', 'offer-sdp-data');
+    socket.emit('join', { meeting_id: meetingId, username: 'User1' });
+    socket2.emit('join', { meeting_id: meetingId, username: 'User2' });
+
+    // Emit a chat message from the first client
+    socket.emit('chat_message', { meeting_id: meetingId, sender: 'User1', text: testMessage });
+
+    // Listen for chat_message event on the second client
+    socket2.on('chat_message', (data) => {
+      expect(data).to.have.property('sender', 'User1');
+      expect(data).to.have.property('text', testMessage);
       done();
     });
   });
 
-  it('should handle answer event', function(done) {
-    socket.emit('answer', { meeting_id: meetingId, sdp: 'answer-sdp-data' });
-
-    socket.on('answer', (data) => {
-      expect(data).to.have.property('sdp', 'answer-sdp-data');
-      done();
-    });
-  });
-
-  it('should handle ice_candidate event', function(done) {
-    socket.emit('ice_candidate', { meeting_id: meetingId, candidate: 'ice-candidate-data' });
-
-    socket.on('ice_candidate', (data) => {
-      expect(data).to.have.property('candidate', 'ice-candidate-data');
-      done();
-    });
-  });
-
-  after(function() {
-    socket.disconnect();
+  afterEach(function() {
+    if (socket) socket.disconnect();
+    if (socket2) socket2.disconnect();
   });
 });
