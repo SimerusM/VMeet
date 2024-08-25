@@ -25,7 +25,7 @@ def handle_join(data):
     username = data['username']
     join_room(meeting_id)
     print(f'User {username} joined meeting {meeting_id}')
-    emit('user_joined', {'username': username}, room=meeting_id)
+    emit('user_joined', {'username': username, 'meeting_id': meeting_id}, room=meeting_id)
 
 # Handle chat messages
 @socketio.on('chat_message')
