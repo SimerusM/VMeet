@@ -7,7 +7,7 @@ import toast, { Toaster } from 'react-hot-toast';
 const SERVER_URL = 'http://127.0.0.1:5000';
 
 const MeetingPage = () => {
-  const { id } = useParams();
+  const { id: meeting_id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const username = location.state?.username;
@@ -24,14 +24,29 @@ const MeetingPage = () => {
       return;
     }
 
-    console.log(`Joining meeting with ID: ${id}`);
+    console.log(`Joining meeting with ID: ${meeting_id}`);
     
     const newSocket = io(SERVER_URL);
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
       console.log('Connected to server');
-      newSocket.emit('join', { meeting_id: id, username });
+      newSocket.emit('join', { meeting_id: meeting_id, username });
+    });
+
+    newSocket.on('user_joined', (data) => {
+      console.log(`${data}`);
+      console.log(`User ${data.username} joined the meeting`);
+      toast.success(`User ${data.username} joined the meeting`);
+      if (data.username == username) {
+        // get chat history with fetch
+        fetch(`${SERVER_URL}/api/chat_history/${meeting_id}`)
+          .then((response) => response.json())
+          .then((data) => {
+            // console.log(`data is ${JSON.stringify(data)}`);
+            setMessages(data);
+          });
+      }
     });
 
     newSocket.on('chat_message', (msg) => {
@@ -39,7 +54,7 @@ const MeetingPage = () => {
     });
 
     return () => newSocket.close();
-  }, [id, username, navigate]);
+  }, [meeting_id, username, navigate]);
 
   const toggleMute = () => setIsMuted(!isMuted);
   const toggleVideo = () => setIsVideoOff(!isVideoOff);
@@ -49,7 +64,7 @@ const MeetingPage = () => {
     if (newMessage.trim()) {
       const messageObj = { text: newMessage, sender: username };
       if (socket) {
-        socket.emit('chat_message', { meeting_id: id, ...messageObj });
+        socket.emit('chat_message', { meeting_id: meeting_id, ...messageObj });
       }
       setNewMessage('');
     }
@@ -67,7 +82,7 @@ const MeetingPage = () => {
     <div className="flex flex-col h-screen bg-gray-100">
       <Toaster position="top-center" reverseOrder={false} />
       <header className="bg-blue-600 text-white p-4">
-        <h1 className="text-2xl">Meeting: {id}</h1>
+        <h1 className="text-2xl">Meeting: {meeting_id}</h1>
         <p>Welcome, {username}!</p>
       </header>
       <main className="flex flex-1 overflow-hidden">
