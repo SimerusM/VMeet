@@ -23,6 +23,13 @@ def setup_chat_routes(app, session_storage, log_message):
         else:
             return jsonify({'error': 'Meeting ID not found'}), 404
 
+    @app.route('/api/session/<meeting_id>', methods=['GET'])
+    def get_users(meeting_id):
+        if meeting_id in session_storage:
+            return jsonify(session_storage[meeting_id])
+        else:
+            return jsonify({'error': 'Meeting ID not found'}), 404
+
 def setup_chat_sockets(socketio, session_storage, log_message):
     @socketio.on('join')
     def handle_join(data):
