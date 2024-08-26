@@ -40,6 +40,8 @@ def setup_chat_sockets(socketio, session_storage, log_message):
             return
         session['users'].append(username)
         join_room(meeting_id)
+
+        log_message("DEBUG", "Session storage: ", session_storage)
         log_message('INFO', f'User {username} joined the meeting', meeting_id)
         emit('user_joined', {'username': username, 'meeting_id': meeting_id}, room=meeting_id)
 

@@ -18,7 +18,7 @@ ERROR_COLOR = '\033[91m'
 CRITICAL_COLOR = '\033[41m'
 RESET_COLOR = '\033[0m'
 
-def log_message(level, message, meeting=''):
+def log_message(level: str, message: str, meeting=''):
     color_map = {
         DEBUG: DEBUG_COLOR,
         INFO: INFO_COLOR,

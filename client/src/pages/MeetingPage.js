@@ -17,6 +17,12 @@ const MeetingPage = () => {
   const [newMessage, setNewMessage] = useState('');
   const [socket, setSocket] = useState(null);
 
+  // webrtc stuff
+  const [localStream, setLocalStream] = useState(null);
+  const [remoteStream, setRemoteStream] = useState(null);
+  const [peerConnections, setPeerConnections] = useState({});
+  
+
   useEffect(() => {
     if (!username) {
       toast.error('Please enter a username before joining a meeting.');
@@ -38,7 +44,7 @@ const MeetingPage = () => {
       console.log(`${data}`);
       console.log(`User ${data.username} joined the meeting`);
       toast.success(`User ${data.username} joined the meeting`);
-      if (data.username == username) {
+      if (data.username === username) {
         // get chat history with fetch
         fetch(`${SERVER_URL}/api/chat_history/${meeting_id}`)
           .then((response) => response.json())
