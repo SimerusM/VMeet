@@ -1,0 +1,28 @@
+services:
+  backend:
+    build:
+      context: ./api-server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./api-server:/app
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./client
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./client:/app
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    environment:
+      - REACT_APP_API_URL=http://backend:5000
+
+networks:
+  app-network:
+    driver: bridge

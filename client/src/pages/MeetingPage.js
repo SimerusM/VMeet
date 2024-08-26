@@ -4,7 +4,7 @@ import Button from '../components/Button';
 import io from 'socket.io-client';
 import toast, { Toaster } from 'react-hot-toast';
 
-const SERVER_URL = 'http://127.0.0.1:5000';
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const MeetingPage = () => {
   const { meeting_id } = useParams();
@@ -26,7 +26,7 @@ const MeetingPage = () => {
 
     console.log(`Joining meeting with ID: ${meeting_id}`);
 
-    const newSocket = io(SERVER_URL);
+    const newSocket = io(apiUrl);
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
@@ -38,9 +38,9 @@ const MeetingPage = () => {
       console.log(`${data}`);
       console.log(`User ${data.username} joined the meeting`);
       toast.success(`User ${data.username} joined the meeting`);
-      if (data.username == username) {
+      if (data.username === username) {
         // get chat history with fetch
-        fetch(`${SERVER_URL}/api/chat_history/${meeting_id}`)
+        fetch(`${apiUrl}/api/chat_history/${meeting_id}`)
           .then((response) => response.json())
           .then((data) => {
             setMessages(data);
