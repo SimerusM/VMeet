@@ -7,7 +7,7 @@ import toast, { Toaster } from 'react-hot-toast';
 const SERVER_URL = 'http://127.0.0.1:5000';
 
 const MeetingPage = () => {
-  const { id: meeting_id } = useParams();
+  const { meeting_id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const username = location.state?.username;
@@ -31,7 +31,7 @@ const MeetingPage = () => {
 
     newSocket.on('connect', () => {
       console.log('Connected to server');
-      newSocket.emit('join', { meeting_id: meeting_id, username });
+      newSocket.emit('join', { meeting_id: meeting_id, username: username });
     });
 
     newSocket.on('user_joined', (data) => {
@@ -53,6 +53,11 @@ const MeetingPage = () => {
       setMessages((prevMessages) => [...prevMessages, msg]);
     });
 
+    newSocket.on('error', (error) => {
+      toast.error(error);
+      navigate('/');
+    });
+
     return () => newSocket.close();
   }, [meeting_id, username, navigate]);
 
@@ -62,9 +67,8 @@ const MeetingPage = () => {
   const sendMessage = (e) => {
     e.preventDefault();
     if (newMessage.trim()) {
-      const messageObj = { text: newMessage, sender: username };
       if (socket) {
-        socket.emit('chat_message', { meeting_id: meeting_id, ...messageObj });
+        socket.emit('chat_message', { meeting_id: meeting_id, text: newMessage, sender: username });
       }
       setNewMessage('');
     }
