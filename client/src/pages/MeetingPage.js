@@ -25,7 +25,7 @@ const MeetingPage = () => {
     }
 
     console.log(`Joining meeting with ID: ${meeting_id}`);
-    
+
     const newSocket = io(SERVER_URL);
     setSocket(newSocket);
 

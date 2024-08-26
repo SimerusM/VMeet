@@ -24,7 +24,7 @@ describe('Socket.IO meeting tests', function() {
     const data = await response.json();
     meetingId = data.meeting_id;
     expect(meetingId).to.be.a('string'); // Check that meetingId is a string
-  
+
     // Connect both clients to the server
     socket = io(SERVER_URL);
     socket2 = io(SERVER_URL);

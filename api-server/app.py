@@ -47,7 +47,7 @@ def create_meeting():
     username = data['username']
     session_storage[meeting_id] = {
         'host': username,
-        'users': [username],
+        'users': [],
         'chat_history': []
     }
     log_message(INFO, f'User {username} created a new meeting', meeting_id)
@@ -56,6 +56,9 @@ def create_meeting():
 # When users want to join a meeting
 @socketio.on('join')
 def handle_join(data):
+    if 'username' not in data or 'meeting_id' not in data:
+        log_message(ERROR, f'Join request missing username or meeting ID: {data}')
+        return
     meeting_id = data['meeting_id']
     username = data['username']
 
@@ -91,7 +94,7 @@ def handle_chat_message(data):
 # Endpoint to retrieve chat history
 @app.route('/api/chat_history/<meeting_id>', methods=['GET'])
 def get_chat_history(meeting_id):
-    if meeting_id in chat_storage:
+    if meeting_id in session_storage:
         return jsonify(session_storage[meeting_id]['chat_history'])
     else:
         return jsonify({'error': 'Meeting ID not found'}), 404
