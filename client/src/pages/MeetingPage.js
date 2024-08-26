@@ -52,11 +52,6 @@ const MeetingPage = () => {
       setMessages((prevMessages) => [...prevMessages, msg]);
     });
 
-    newSocket.on('error', (error) => {
-      toast.error(error);
-      navigate('/');
-    });
-
     return () => newSocket.close();
   }, [meeting_id, username, navigate]);
 

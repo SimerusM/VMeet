@@ -15,11 +15,24 @@ const HomePage = () => {
       toast.error('Please enter a username before joining a meeting.');
       return;
     }
-    if (meetCode.trim()) {
-      navigate(`/meet/${meetCode}`, { state: { username } });
-    } else {
+    if (!meetCode.trim()) {
       toast.error('Please enter a meeting code.');
+      return;
     }
+
+    fetch(`${apiUrl}/api/session/${meetCode}`).then((response) => {
+      if (!response.ok) {
+        toast.error('Meeting code not found. Please try again.');
+        return;
+      }
+      return response.json();
+    }).then((data) => {
+      if (data.users.includes(username)) {
+        toast.error(`User ${username} is already in this meeting.`);
+        return;
+      }
+      navigate(`/meet/${meetCode}`, { state: { username } });
+    });
   };
 
   const handleCreateMeet = async () => {
