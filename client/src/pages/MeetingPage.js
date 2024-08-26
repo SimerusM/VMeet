@@ -43,7 +43,6 @@ const MeetingPage = () => {
         fetch(`${SERVER_URL}/api/chat_history/${meeting_id}`)
           .then((response) => response.json())
           .then((data) => {
-            // console.log(`data is ${JSON.stringify(data)}`);
             setMessages(data);
           });
       }
