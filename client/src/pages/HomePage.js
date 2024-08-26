@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Input, Button } from "../components";
 import toast, { Toaster } from 'react-hot-toast';
 
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const HomePage = () => {
   const [meetCode, setMeetCode] = useState('');
   const [username, setUsername] = useState('');
@@ -26,7 +28,7 @@ const HomePage = () => {
       return;
     }
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/create-meeting', {
+      const response = await fetch(`${apiUrl}/api/create-meeting`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -29,7 +29,7 @@ def log_message(level, message, meeting=''):
     
     color = color_map.get(level, RESET_COLOR)
     meeting = f"[{meeting}] " if meeting else ''
-    print(f"{color}{level} {meeting}- {message}{RESET_COLOR}")
+    print(f"{color}{level} {meeting}- {message}{RESET_COLOR}", flush=True)
 
 app = Flask(__name__)
 CORS(app)
