@@ -29,7 +29,7 @@ def log_message(level: str, message: str, meeting=''):
     
     color = color_map.get(level, RESET_COLOR)
     meeting = f"[{meeting}] " if meeting else ''
-    print(f"{color}{level} {meeting}- {message}{RESET_COLOR}")
+    print(f"{color}{level} {meeting}- {message}{RESET_COLOR}", flush=True)
 
 app = Flask(__name__)
 CORS(app)
@@ -44,4 +44,8 @@ setup_chat_sockets(socketio, session_storage, log_message)
 setup_webrtc_sockets(socketio)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    import os
+    if os.getenv('TESTING', True):
+        socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
+    else:
+        socketio.run(app, debug=True)

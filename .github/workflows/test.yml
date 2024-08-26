@@ -1,0 +1,48 @@
+name: Run Tests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Run Tests
+    env:
+      TESTING: true
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.5.0'
+
+      - name: Install Node.js Dependencies
+        run: npm install
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10.10'
+
+      - name: Setup Python Virtual Environment
+        run: python -m venv python3-virtualenv
+
+      - name: Activate Virtual Environment and Install Dependencies
+        run: |
+          source python3-virtualenv/bin/activate
+          pip install -r api-server/requirements.txt
+
+      - name: Run Flask Server in Background
+        run: |
+          source python3-virtualenv/bin/activate
+          python api-server/app.py &
+          sleep 5  # Ensure server has time to start
+
+      - name: Run Tests
+        run: npm run test

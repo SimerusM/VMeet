@@ -23,6 +23,13 @@ def setup_chat_routes(app, session_storage, log_message):
         else:
             return jsonify({'error': 'Meeting ID not found'}), 404
 
+    @app.route('/api/session/<meeting_id>', methods=['GET'])
+    def get_users(meeting_id):
+        if meeting_id in session_storage:
+            return jsonify(session_storage[meeting_id])
+        else:
+            return jsonify({'error': 'Meeting ID not found'}), 404
+
 def setup_chat_sockets(socketio, session_storage, log_message):
     @socketio.on('join')
     def handle_join(data):
@@ -31,15 +38,9 @@ def setup_chat_sockets(socketio, session_storage, log_message):
             return
         meeting_id = data['meeting_id']
         username = data['username']
-        if meeting_id not in session_storage:
-            emit('error', 'Invalid meeting ID', room=meeting_id)
-            return
-        session = session_storage[meeting_id]
-        if username in session_storage[meeting_id]['users']:
-            emit('error', 'User already joined', room=meeting_id)
-            return
-        session['users'].append(username)
         join_room(meeting_id)
+        session = session_storage[meeting_id]
+        session['users'].append(username)
 
         log_message("DEBUG", "Session storage: ", session_storage)
         log_message('INFO', f'User {username} joined the meeting', meeting_id)
