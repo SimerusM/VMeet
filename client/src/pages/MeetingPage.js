@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import io from 'socket.io-client';
@@ -10,18 +10,17 @@ const MeetingPage = () => {
   const { meeting_id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const socketRef = useRef();
   const username = location.state?.username;
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [socket, setSocket] = useState(null);
 
-  // webrtc stuff
-  const [localStream, setLocalStream] = useState(null);
-  const [remoteStream, setRemoteStream] = useState(null);
-  const [peerConnections, setPeerConnections] = useState({});
-  
+  // // webrtc stuff
+  // const [localStream, setLocalStream] = useState(null);
+  // const [remoteStream, setRemoteStream] = useState(null);
+  // const [peerConnections, setPeerConnections] = useState({});
 
   useEffect(() => {
     if (!username) {
@@ -33,7 +32,7 @@ const MeetingPage = () => {
     console.log(`Joining meeting with ID: ${meeting_id}`);
 
     const newSocket = io(apiUrl);
-    setSocket(newSocket);
+    socketRef.current = newSocket;
 
     newSocket.on('connect', () => {
       console.log('Connected to server');
@@ -67,8 +66,8 @@ const MeetingPage = () => {
   const sendMessage = (e) => {
     e.preventDefault();
     if (newMessage.trim()) {
-      if (socket) {
-        socket.emit('chat_message', { meeting_id: meeting_id, text: newMessage, sender: username });
+      if (socketRef.current) {
+        socketRef.current.emit('chat_message', { meeting_id: meeting_id, text: newMessage, sender: username });
       }
       setNewMessage('');
     }
