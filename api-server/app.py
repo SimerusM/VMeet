@@ -44,4 +44,7 @@ setup_chat_sockets(socketio, session_storage, log_message)
 setup_webrtc_sockets(socketio)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    if os.getenv('TESTING', True):
+        app.run(host='0.0.0.0', port=5000, allow_unsafe_werkzeug=True)
+    else:
+        app.run(host='0.0.0.0', port=5000)
