@@ -58,7 +58,7 @@ const MeetingPage = () => {
     });
 
     return () => newSocket.close();
-  }, [meeting_id, username, navigate]);
+  }, []);
 
   const toggleMute = () => setIsMuted(!isMuted);
   const toggleVideo = () => setIsVideoOff(!isVideoOff);
