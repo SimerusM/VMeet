@@ -53,8 +53,8 @@ def create_meeting():
 
     session_storage[meeting_id] = {
         'host': username,
-        'users': [],
-        'chat_history': []
+        'users': {}, # {username: sid}
+        'chat_history': [] # [{sender: username, text: message}]
     }
     log_message('INFO', f'User {username} created a new meeting', meeting_id)
     return jsonify({'meeting_id': meeting_id})
@@ -76,7 +76,7 @@ def handle_join(data):
     username = data['username']
     join_room(meeting_id)
     session = session_storage[meeting_id]
-    session['users'].append(username)
+    session['users'][username] = request.sid
 
     log_message("DEBUG", "Session storage: ", session_storage)
     log_message('INFO', f'User {username} joined the meeting', meeting_id)
@@ -85,8 +85,9 @@ def handle_join(data):
 @socketio.on('disconnect')
 def handle_disconnect():
     for meeting_id, session in session_storage.items():
-        if request.sid in session['users']:
-            session['users'].remove(request.sid)
+        if request.sid in session['users'].values():
+            username = [username for username, sid in session['users'].items() if sid == request.sid][0]
+            del session['users'][username]
             if len(session['users']) == 0:
                 del session_storage[meeting_id]
             log_message('INFO', f'User {request.sid} left the meeting', meeting_id)
