@@ -65,6 +65,12 @@ def get_session(meeting_id):
         return jsonify({'error': 'Meeting ID not found'}), 404
     return jsonify(session_storage[meeting_id])
 
+@app.route('/api/users/<meeting_id>', methods=['GET'])
+def get_users(meeting_id):
+    if meeting_id not in session_storage:
+        return jsonify({'error': 'Meeting ID not found'}), 404
+    return jsonify(list(session_storage[meeting_id]['users'].keys()))
+
 @socketio.on('join')
 def handle_join(data):
     if 'username' not in data or 'meeting_id' not in data:
