@@ -1,5 +1,7 @@
 import toast from 'react-hot-toast';
 
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 class RTCHandler {
   constructor(meeting_id, username, socket, onPeerUpdate) {
     this.meeting_id = meeting_id;
@@ -15,6 +17,9 @@ class RTCHandler {
   async initialize() {
     await this.initializeLocalStream();
     this.setupSocketListeners();
+    const response = await fetch(`${apiUrl}/api/users/${this.meeting_id}`);
+    const users = await response.json();
+    this.handleUsers(users);
   }
 
   async initializeLocalStream() {
@@ -136,11 +141,10 @@ class RTCHandler {
 
   handleTrackEvent = (event, peerUsername) => {
     console.log(`Received tracks from ${peerUsername}:`, event.streams);
-    toast.success('Received tracks from ' + peerUsername);
     this.updatePeers({ [peerUsername]: { stream: event.streams[0] } });
   }
 
-  handleUsers = ({ users }) => {
+  handleUsers = (users) => {
     console.log('Received users list:', users);
     users.forEach(user => {
       if (user !== this.username && !this.peerConnections[user]) {

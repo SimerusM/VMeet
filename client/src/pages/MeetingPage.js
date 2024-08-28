@@ -47,6 +47,7 @@ const MeetingPage = () => {
     chatHandler.current.initialize();
     const handlePeerUpdate = (update) => {
       setPeers(prevPeers => ({...prevPeers, ...update}));
+      console.debug('Updated peers:', peers);
     }
     rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, handlePeerUpdate);
     rtcHandler.current.initialize();

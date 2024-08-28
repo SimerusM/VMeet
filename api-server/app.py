@@ -98,7 +98,7 @@ def handle_disconnect():
             if len(session['users']) == 0:
                 to_delete.append(meeting_id)
             log_message('INFO', f'User {request.sid} left the meeting', meeting_id)
-            emit('user_left', {'meeting_id': meeting_id}, room=meeting_id)
+            emit('user_left', {'meeting_id': meeting_id, 'username': username}, room=meeting_id)
 
     for meeting_id in to_delete:
         del session_storage[meeting_id]
