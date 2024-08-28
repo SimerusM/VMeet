@@ -90,14 +90,18 @@ def handle_join(data):
 
 @socketio.on('disconnect')
 def handle_disconnect():
+    to_delete = []
     for meeting_id, session in session_storage.items():
         if request.sid in session['users'].values():
             username = [username for username, sid in session['users'].items() if sid == request.sid][0]
             del session['users'][username]
             if len(session['users']) == 0:
-                del session_storage[meeting_id]
+                to_delete.append(meeting_id)
             log_message('INFO', f'User {request.sid} left the meeting', meeting_id)
             emit('user_left', {'meeting_id': meeting_id}, room=meeting_id)
+
+    for meeting_id in to_delete:
+        del session_storage[meeting_id]
 
 setup_chat(app, socketio, session_storage, log_message)
 setup_webrtc(app, socketio, session_storage, log_message)
