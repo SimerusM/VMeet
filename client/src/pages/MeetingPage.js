@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import ChatHandler from '../services/chatHandler';
+import RTCHandler from '../services/rtcHandler';
 
 import Button from '../components/Button';
 import toast, { Toaster } from 'react-hot-toast';
@@ -15,14 +16,14 @@ const MeetingPage = () => {
   const socketRef = useRef();
   const username = location.state?.username;
 
-  const [isReady, setIsReady] = useState(false);
+  const rtcHandler = useRef(null);
+  const [peers, setPeers] = useState({});
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
 
+  const chatHandler = useRef(null);
   const [chatHistory, setChatHistory] = useState([]);
   const [message, setMessage] = useState('');
-  
-  const chatHandler = useRef(null);
 
   useEffect(() => {
     if (!username) {
@@ -32,6 +33,7 @@ const MeetingPage = () => {
     }
 
     console.log(`Joining meeting with ID: ${meeting_id}`);
+    toast.success(`Joining the meeting`);
 
     const newSocket = io(apiUrl);
     socketRef.current = newSocket;
@@ -42,8 +44,17 @@ const MeetingPage = () => {
     });
 
     chatHandler.current = new ChatHandler(meeting_id, username, socketRef.current, setChatHistory);
+    chatHandler.current.initialize();
+    const handlePeerUpdate = (update) => {
+      setPeers(prevPeers => ({...prevPeers, ...update}));
+    }
+    rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, handlePeerUpdate);
+    rtcHandler.current.initialize();
 
-    return () => newSocket.close();
+    return () => {
+      rtcHandler.current.cleanup();
+      socketRef.current.disconnect();
+    }
   }, []);
 
   const toggleMute = () => setIsMuted(!isMuted);
@@ -63,9 +74,27 @@ const MeetingPage = () => {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
   };
 
-  if (!username) {
-    return null; // prevent flickering while redirecting
+  if (!username || !rtcHandler.current) {
+    // wait for username and rtcHandler
+    return null;
   }
+
+  const VideoElement = React.memo(({ stream, muted, peerName }) => {
+    const videoRef = useRef();
+
+    useEffect(() => {
+      if (videoRef.current && stream) {
+        videoRef.current.srcObject = stream;
+      }
+    }, [stream]);
+
+    return (
+      <div>
+        <video ref={videoRef} autoPlay playsInline muted={muted} />
+        <p>{peerName}</p>
+      </div>
+    );
+  });
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
@@ -76,12 +105,15 @@ const MeetingPage = () => {
       </header>
       <main className="flex flex-1 overflow-hidden">
         <div className="flex-1 p-4">
-          <div className="bg-black h-3/4 mb-4 flex items-center justify-center text-white">
-            {isVideoOff ? 'Video Off' : 'Your Video Stream'}
-          </div>
-          <div className="bg-gray-300 h-1/4 flex items-center justify-center">
-            Participant Videos
-          </div>
+          <VideoElement stream={rtcHandler.current.localStream} muted={true} peerName="You" />
+          {Object.entries(peers).map(([peerUsername, peer]) => (
+            <VideoElement 
+              key={peerUsername} 
+              stream={peer.stream} 
+              muted={false} 
+              peerName={peerUsername}
+            />
+          ))}
         </div>
         <div className="w-1/4 bg-white p-4 flex flex-col">
           <h2 className="text-xl mb-4">Chat</h2>

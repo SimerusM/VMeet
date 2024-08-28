@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 
 import HomePage from './pages/HomePage';
 import MeetingPage from './pages/MeetingPage';
@@ -11,7 +11,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/meet/:meeting_id" element={<MeetingPage />} />
-        <Route path="/test/:meeting_id" element={<SignalingTestPage />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
   );
