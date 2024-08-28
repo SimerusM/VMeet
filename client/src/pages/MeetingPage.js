@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import Button from '../components/Button';
 import io from 'socket.io-client';
+import ChatHandler from '../services/chatHandler';
+
+import Button from '../components/Button';
 import toast, { Toaster } from 'react-hot-toast';
 
 const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -12,15 +14,15 @@ const MeetingPage = () => {
   const navigate = useNavigate();
   const socketRef = useRef();
   const username = location.state?.username;
+
+  const [isReady, setIsReady] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
 
-  // // webrtc stuff
-  // const [localStream, setLocalStream] = useState(null);
-  // const [remoteStream, setRemoteStream] = useState(null);
-  // const [peerConnections, setPeerConnections] = useState({});
+  const [chatHistory, setChatHistory] = useState([]);
+  const [message, setMessage] = useState('');
+  
+  const chatHandler = useRef(null);
 
   useEffect(() => {
     if (!username) {
@@ -39,23 +41,7 @@ const MeetingPage = () => {
       newSocket.emit('join', { meeting_id: meeting_id, username: username });
     });
 
-    newSocket.on('user_joined', (data) => {
-      console.log(`${data}`);
-      console.log(`User ${data.username} joined the meeting`);
-      toast.success(`User ${data.username} joined the meeting`);
-      if (data.username === username) {
-        // get chat history with fetch
-        fetch(`${apiUrl}/api/chat_history/${meeting_id}`)
-          .then((response) => response.json())
-          .then((data) => {
-            setMessages(data);
-          });
-      }
-    });
-
-    newSocket.on('chat_message', (msg) => {
-      setMessages((prevMessages) => [...prevMessages, msg]);
-    });
+    chatHandler.current = new ChatHandler(meeting_id, username, socketRef.current, setChatHistory);
 
     return () => newSocket.close();
   }, []);
@@ -65,12 +51,12 @@ const MeetingPage = () => {
 
   const sendMessage = (e) => {
     e.preventDefault();
-    if (newMessage.trim()) {
-      if (socketRef.current) {
-        socketRef.current.emit('chat_message', { meeting_id: meeting_id, text: newMessage, sender: username });
-      }
-      setNewMessage('');
+    if (!message.trim()) {
+      toast.error('Please enter a message before sending.');
+      return;
     }
+    chatHandler.current.sendMessage(message);
+    setMessage('');
   };
 
   const getProfilePicture = (name) => {
@@ -100,7 +86,7 @@ const MeetingPage = () => {
         <div className="w-1/4 bg-white p-4 flex flex-col">
           <h2 className="text-xl mb-4">Chat</h2>
           <div className="flex-1 overflow-y-auto mb-4">
-            {messages.map((msg, index) => (
+            {chatHistory.map((msg, index) => (
               <div key={index} className="mb-2 flex items-center">
                 <img 
                   src={getProfilePicture(msg.sender)} 
@@ -116,8 +102,8 @@ const MeetingPage = () => {
           <form onSubmit={sendMessage} className="flex">
             <input
               type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
               className="flex-1 px-2 py-1 border rounded-l"
               placeholder="Type a message..."
             />
