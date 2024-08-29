@@ -35,10 +35,6 @@ class ChatHandler {
   sendMessage(text) {
     this.socket.emit('chat_message', { meeting_id: this.meeting_id, text: text, sender: this.username });
   }
-
-  setChatHistoryListener(listener) {
-    this.setChatHistory = listener;
-  }
 }
 
 export default ChatHandler;

@@ -31,6 +31,13 @@ class RTCHandler {
     try {
       this.localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       this.hasMediaDevices = true;
+
+      // Log out details of the localStream
+      console.log("Local Stream:", this.localStream);
+
+      this.localStream.getTracks().forEach(track => {
+        console.log(`Track kind: ${track.kind}, Track ID: ${track.id}, Track enabled: ${track.enabled}`);
+      });
     } catch (err) {
       console.warn('No media devices found or access denied:', err);
       toast.error('No media devices found or access denied. Continuing without video/audio.');

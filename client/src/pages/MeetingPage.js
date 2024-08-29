@@ -62,8 +62,33 @@ const MeetingPage = () => {
     }
   }, []);
 
-  const toggleMute = () => setIsMuted(!isMuted);
-  const toggleVideo = () => setIsVideoOff(!isVideoOff);
+  const toggleMute = () => {
+    setIsMuted(prevState => {
+      const newMutedState = !prevState;
+      // Mute or unmute the audio track in the local stream
+      if (rtcHandler.current && rtcHandler.current.localStream) {
+        rtcHandler.current.localStream.getAudioTracks().forEach(track => {
+          console.log(track);
+          track.enabled = !newMutedState;
+        });
+      }
+      return newMutedState;
+    });
+  };
+
+  const toggleVideo = () => {
+    setIsVideoOff(prevState => {
+      const newVideoState = !prevState;
+      // Turn on or off the video track in the local stream
+      if (rtcHandler.current && rtcHandler.current.localStream) {
+        rtcHandler.current.localStream.getVideoTracks().forEach(track => {
+          console.log(track);
+          track.enabled = !newVideoState;
+        });
+      }
+      return newVideoState;
+    });
+  };
 
   const sendMessage = (e) => {
     e.preventDefault();
@@ -80,7 +105,6 @@ const MeetingPage = () => {
   };
 
   if (!username || !rtcHandler.current) {
-    // wait for username and rtcHandler
     return null;
   }
 
