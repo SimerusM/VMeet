@@ -43,19 +43,15 @@ const MeetingPage = () => {
       newSocket.emit('join', { meeting_id: meeting_id, username: username });
     });
 
-    const errorHandler = (error) => {
-      console.error(error);
-      navigate('/');
-      toast.error(error.message);
-    }
-
-    chatHandler.current = new ChatHandler(meeting_id, username, socketRef.current, setChatHistory, errorHandler);
+    chatHandler.current = new ChatHandler(meeting_id, username, socketRef.current, setChatHistory);
     chatHandler.current.initialize();
     const handlePeerUpdate = (update) => {
       setPeers(prevPeers => ({...prevPeers, ...update}));
+      console.debug('Updated peers:', peers);
     }
-    rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, handlePeerUpdate, errorHandler);
+    rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, handlePeerUpdate);
     rtcHandler.current.initialize();
+
     return () => {
       rtcHandler.current.cleanup();
       socketRef.current.disconnect();
@@ -94,9 +90,9 @@ const MeetingPage = () => {
     }, [stream]);
 
     return (
-      <div className="border-2">
-        <video ref={videoRef} autoPlay playsInline muted={muted} />
-        <p>{peerName}</p>
+      <div className="video-container">
+        <video ref={videoRef} autoPlay playsInline muted={muted} className="video-element"/>
+        <p className="video-username">{peerName}</p>
       </div>
     );
   });
@@ -109,7 +105,7 @@ const MeetingPage = () => {
         <p>Welcome, {username}!</p>
       </header>
       <main className="flex flex-1 overflow-hidden">
-        <div className="flex-1 p-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
           <VideoElement stream={rtcHandler.current.localStream} muted={true} peerName="You" />
           {Object.entries(peers).map(([peerUsername, peer]) => (
             <VideoElement 
