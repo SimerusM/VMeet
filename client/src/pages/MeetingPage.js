@@ -51,10 +51,7 @@ const MeetingPage = () => {
 
     chatHandler.current = new ChatHandler(meeting_id, username, socketRef.current, setChatHistory, errorHandler);
     chatHandler.current.initialize();
-    const handlePeerUpdate = (update) => {
-      setPeers(prevPeers => ({...prevPeers, ...update}));
-    }
-    rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, handlePeerUpdate, errorHandler);
+    rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, setPeers, errorHandler);
     rtcHandler.current.initialize();
     return () => {
       rtcHandler.current.cleanup();

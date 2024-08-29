@@ -3,13 +3,13 @@ import toast from 'react-hot-toast';
 const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 class RTCHandler {
-  constructor(meeting_id, username, socket, onPeerUpdate, onError) {
+  constructor(meeting_id, username, socket, setPeers, onError) {
     this.meeting_id = meeting_id;
     this.username = username;
     this.socket = socket;
     this.localStream = null;
     this.peerConnections = {};
-    this.onPeerUpdate = onPeerUpdate;
+    this.setPeers = setPeers;
     this.mediaEnabled = { video: true, audio: true };
     this.hasMediaDevices = false; // New flag to indicate if media devices are available
     this.onError = onError;
@@ -81,7 +81,7 @@ class RTCHandler {
       this.peerConnections[peerUsername].close();
       delete this.peerConnections[peerUsername];
     }
-    this.updatePeers(prevPeers => {
+    this.setPeers(prevPeers => {
       const newPeers = { ...prevPeers };
       delete newPeers[peerUsername];
       return newPeers;
@@ -173,8 +173,8 @@ class RTCHandler {
   }
 
   updatePeers = (update) => {
-    if (this.onPeerUpdate) {
-      this.onPeerUpdate(update);
+    if (this.setPeers) {
+      this.setPeers(prevPeers => ({...prevPeers, ...update}));
     }
   }
 
