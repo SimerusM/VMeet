@@ -36,3 +36,37 @@
     transform: rotate(360deg);
   }
 }
+
+/* Add these styles in your CSS file */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-gap: 10px;
+}
+
+.video-container {
+  position: relative;
+  overflow: hidden;
+  background: black;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-element {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.video-username {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
