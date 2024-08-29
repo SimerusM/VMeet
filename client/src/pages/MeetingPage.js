@@ -108,12 +108,14 @@ const MeetingPage = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
           <VideoElement stream={rtcHandler.current.localStream} muted={true} peerName="You" />
           {Object.entries(peers).map(([peerUsername, peer]) => (
-            <VideoElement 
-              key={peerUsername} 
-              stream={peer.stream} 
-              muted={false} 
-              peerName={peerUsername}
-            />
+            peerUsername !== username && (
+              <VideoElement 
+                key={peerUsername} 
+                stream={peer.stream} 
+                muted={false} 
+                peerName={peerUsername}
+              />
+            )
           ))}
         </div>
         <div className="w-1/4 bg-white p-4 flex flex-col">
