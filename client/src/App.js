@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 
 import HomePage from './pages/HomePage';
 import MeetingPage from './pages/MeetingPage';
-import SignalingTestPage from './pages/SignalTestPage';
 
 const App = () => {
   return (

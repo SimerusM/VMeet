@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 class RTCHandler {
-  constructor(meeting_id, username, socket, onPeerUpdate) {
+  constructor(meeting_id, username, socket, onPeerUpdate, onError) {
     this.meeting_id = meeting_id;
     this.username = username;
     this.socket = socket;
@@ -12,12 +12,17 @@ class RTCHandler {
     this.onPeerUpdate = onPeerUpdate;
     this.mediaEnabled = { video: true, audio: true };
     this.hasMediaDevices = false; // New flag to indicate if media devices are available
+    this.onError = onError;
   }
 
   async initialize() {
     await this.initializeLocalStream();
     this.setupSocketListeners();
     const response = await fetch(`${apiUrl}/api/users/${this.meeting_id}`);
+    if (!response.ok) {
+      this.onError('Failed to fetch users. Please try again.');
+      return;
+    }
     const users = await response.json();
     this.handleUsers(users);
   }

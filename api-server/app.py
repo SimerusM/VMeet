@@ -84,7 +84,6 @@ def handle_join(data):
     session = session_storage[meeting_id]
     session['users'][username] = request.sid
 
-    log_message("DEBUG", "Session storage: ", session_storage)
     log_message('INFO', f'User {username} joined the meeting', meeting_id)
     emit('user_joined', {'username': username, 'meeting_id': meeting_id}, room=meeting_id)
 

@@ -43,15 +43,19 @@ const MeetingPage = () => {
       newSocket.emit('join', { meeting_id: meeting_id, username: username });
     });
 
-    chatHandler.current = new ChatHandler(meeting_id, username, socketRef.current, setChatHistory);
+    const errorHandler = (error) => {
+      console.error(error);
+      navigate('/');
+      toast.error(error.message);
+    }
+
+    chatHandler.current = new ChatHandler(meeting_id, username, socketRef.current, setChatHistory, errorHandler);
     chatHandler.current.initialize();
     const handlePeerUpdate = (update) => {
       setPeers(prevPeers => ({...prevPeers, ...update}));
-      console.debug('Updated peers:', peers);
     }
-    rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, handlePeerUpdate);
+    rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, handlePeerUpdate, errorHandler);
     rtcHandler.current.initialize();
-
     return () => {
       rtcHandler.current.cleanup();
       socketRef.current.disconnect();
@@ -90,7 +94,7 @@ const MeetingPage = () => {
     }, [stream]);
 
     return (
-      <div>
+      <div className="border-2">
         <video ref={videoRef} autoPlay playsInline muted={muted} />
         <p>{peerName}</p>
       </div>
