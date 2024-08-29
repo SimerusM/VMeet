@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import Button from '../components/Button';
 import io from 'socket.io-client';
+import ChatHandler from '../services/chatHandler';
+import RTCHandler from '../services/rtcHandler';
+
+import Button from '../components/Button';
 import toast, { Toaster } from 'react-hot-toast';
 
 const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -10,12 +13,17 @@ const MeetingPage = () => {
   const { meeting_id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const socketRef = useRef();
   const username = location.state?.username;
+
+  const rtcHandler = useRef(null);
+  const [peers, setPeers] = useState({});
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [socket, setSocket] = useState(null);
+
+  const chatHandler = useRef(null);
+  const [chatHistory, setChatHistory] = useState([]);
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     if (!username) {
@@ -25,56 +33,73 @@ const MeetingPage = () => {
     }
 
     console.log(`Joining meeting with ID: ${meeting_id}`);
+    toast.success(`Joining the meeting`);
 
     const newSocket = io(apiUrl);
-    setSocket(newSocket);
+    socketRef.current = newSocket;
 
     newSocket.on('connect', () => {
       console.log('Connected to server');
       newSocket.emit('join', { meeting_id: meeting_id, username: username });
     });
 
-    newSocket.on('user_joined', (data) => {
-      console.log(`${data}`);
-      console.log(`User ${data.username} joined the meeting`);
-      toast.success(`User ${data.username} joined the meeting`);
-      if (data.username === username) {
-        // get chat history with fetch
-        fetch(`${apiUrl}/api/chat_history/${meeting_id}`)
-          .then((response) => response.json())
-          .then((data) => {
-            setMessages(data);
-          });
-      }
-    });
+    const errorHandler = (error) => {
+      console.error(error);
+      navigate('/');
+      toast.error(error.message);
+    }
 
-    newSocket.on('chat_message', (msg) => {
-      setMessages((prevMessages) => [...prevMessages, msg]);
-    });
-
-    return () => newSocket.close();
-  }, [meeting_id, username, navigate]);
+    chatHandler.current = new ChatHandler(meeting_id, username, socketRef.current, setChatHistory, errorHandler);
+    chatHandler.current.initialize();
+    const handlePeerUpdate = (update) => {
+      setPeers(prevPeers => ({...prevPeers, ...update}));
+    }
+    rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, handlePeerUpdate, errorHandler);
+    rtcHandler.current.initialize();
+    return () => {
+      rtcHandler.current.cleanup();
+      socketRef.current.disconnect();
+    }
+  }, []);
 
   const toggleMute = () => setIsMuted(!isMuted);
   const toggleVideo = () => setIsVideoOff(!isVideoOff);
 
   const sendMessage = (e) => {
     e.preventDefault();
-    if (newMessage.trim()) {
-      if (socket) {
-        socket.emit('chat_message', { meeting_id: meeting_id, text: newMessage, sender: username });
-      }
-      setNewMessage('');
+    if (!message.trim()) {
+      toast.error('Please enter a message before sending.');
+      return;
     }
+    chatHandler.current.sendMessage(message);
+    setMessage('');
   };
 
   const getProfilePicture = (name) => {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
   };
 
-  if (!username) {
-    return null; // prevent flickering while redirecting
+  if (!username || !rtcHandler.current) {
+    // wait for username and rtcHandler
+    return null;
   }
+
+  const VideoElement = React.memo(({ stream, muted, peerName }) => {
+    const videoRef = useRef();
+
+    useEffect(() => {
+      if (videoRef.current && stream) {
+        videoRef.current.srcObject = stream;
+      }
+    }, [stream]);
+
+    return (
+      <div className="border-2">
+        <video ref={videoRef} autoPlay playsInline muted={muted} />
+        <p>{peerName}</p>
+      </div>
+    );
+  });
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
@@ -85,17 +110,20 @@ const MeetingPage = () => {
       </header>
       <main className="flex flex-1 overflow-hidden">
         <div className="flex-1 p-4">
-          <div className="bg-black h-3/4 mb-4 flex items-center justify-center text-white">
-            {isVideoOff ? 'Video Off' : 'Your Video Stream'}
-          </div>
-          <div className="bg-gray-300 h-1/4 flex items-center justify-center">
-            Participant Videos
-          </div>
+          <VideoElement stream={rtcHandler.current.localStream} muted={true} peerName="You" />
+          {Object.entries(peers).map(([peerUsername, peer]) => (
+            <VideoElement 
+              key={peerUsername} 
+              stream={peer.stream} 
+              muted={false} 
+              peerName={peerUsername}
+            />
+          ))}
         </div>
         <div className="w-1/4 bg-white p-4 flex flex-col">
           <h2 className="text-xl mb-4">Chat</h2>
           <div className="flex-1 overflow-y-auto mb-4">
-            {messages.map((msg, index) => (
+            {chatHistory.map((msg, index) => (
               <div key={index} className="mb-2 flex items-center">
                 <img 
                   src={getProfilePicture(msg.sender)} 
@@ -111,8 +139,8 @@ const MeetingPage = () => {
           <form onSubmit={sendMessage} className="flex">
             <input
               type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
               className="flex-1 px-2 py-1 border rounded-l"
               placeholder="Type a message..."
             />

@@ -20,14 +20,14 @@ const HomePage = () => {
       return;
     }
 
-    fetch(`${apiUrl}/api/session/${meetCode}`).then((response) => {
+    fetch(`${apiUrl}/api/users/${meetCode}`).then((response) => {
       if (!response.ok) {
         toast.error('Meeting code not found. Please try again.');
         return;
       }
       return response.json();
-    }).then((data) => {
-      if (data.users.includes(username)) {
+    }).then((users) => {
+      if (users.includes(username)) {
         toast.error(`User ${username} is already in this meeting.`);
         return;
       }
