@@ -25,6 +25,7 @@ class ChatHandler {
 
   setupSocketListeners() {
     this.socket.on('chat_message', (data) => {
+      console.log("WebSocket event received:", data);
       this.chatHistory.push(data);
       if (this.setChatHistory) {
         this.setChatHistory([...this.chatHistory]); // update UI

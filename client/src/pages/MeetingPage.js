@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import ChatHandler from '../services/chatHandler';
 import RTCHandler from '../services/rtcHandler';
+import ChatInput from '../components/ChatInput';
 
 import Button from '../components/Button';
 import toast, { Toaster } from 'react-hot-toast';
@@ -23,9 +24,8 @@ const MeetingPage = () => {
 
   const chatHandler = useRef(null);
   const [chatHistory, setChatHistory] = useState([]);
-  const [message, setMessage] = useState('');
 
-  useEffect(() => {
+  const initializeMeeting = () => {
     if (!username) {
       toast.error('Please enter a username before joining a meeting.');
       navigate('/');
@@ -53,6 +53,11 @@ const MeetingPage = () => {
     chatHandler.current.initialize();
     rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, setPeers, errorHandler);
     rtcHandler.current.initialize();
+  };
+
+  useEffect(() => {
+    initializeMeeting();
+
     return () => {
       rtcHandler.current.cleanup();
       socketRef.current.disconnect();
@@ -87,15 +92,15 @@ const MeetingPage = () => {
     });
   };
 
-  const sendMessage = (e) => {
-    e.preventDefault();
+  const handleSendMessage = useCallback((message) => {
     if (!message.trim()) {
       toast.error('Please enter a message before sending.');
       return;
     }
     chatHandler.current.sendMessage(message);
-    setMessage('');
-  };
+    setChatHistory(prevHistory => [...prevHistory, { sender: username, text: message }]);
+  }, [username]);
+  
 
   const getProfilePicture = (name) => {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
@@ -122,6 +127,24 @@ const MeetingPage = () => {
     );
   });
 
+  const ChatMessages = React.memo(({ chatHistory }) => (
+    <div className="flex-1 overflow-y-auto mb-4">
+      {chatHistory.map((msg, index) => (
+        <div key={index} className="mb-2 flex items-center">
+          <img 
+            src={getProfilePicture(msg.sender)} 
+            alt={`${msg.sender}'s avatar`} 
+            className="w-8 h-8 rounded-full mr-2"
+          />
+          <div>
+            <strong>{msg.sender}:</strong> {msg.text}
+          </div>
+        </div>
+      ))}
+    </div>
+  ));
+  
+
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <Toaster position="top-center" reverseOrder={false} />
@@ -145,30 +168,8 @@ const MeetingPage = () => {
         </div>
         <div className="w-1/4 bg-white p-4 flex flex-col">
           <h2 className="text-xl mb-4">Chat</h2>
-          <div className="flex-1 overflow-y-auto mb-4">
-            {chatHistory.map((msg, index) => (
-              <div key={index} className="mb-2 flex items-center">
-                <img 
-                  src={getProfilePicture(msg.sender)} 
-                  alt={`${msg.sender}'s avatar`} 
-                  className="w-8 h-8 rounded-full mr-2"
-                />
-                <div>
-                  <strong>{msg.sender}:</strong> {msg.text}
-                </div>
-              </div>
-            ))}
-          </div>
-          <form onSubmit={sendMessage} className="flex">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="flex-1 px-2 py-1 border rounded-l"
-              placeholder="Type a message..."
-            />
-            <Button type="submit" className="rounded-l-none">Send</Button>
-          </form>
+          <ChatMessages chatHistory={chatHistory} />
+          <ChatInput onSend={handleSendMessage} />
         </div>
       </main>
       <footer className="bg-gray-200 p-4 flex justify-center space-x-4">
