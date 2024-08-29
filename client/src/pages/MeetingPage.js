@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
-import ChatHandler from '../services/chatHandler';
 import RTCHandler from '../services/rtcHandler';
-import ChatInput from '../components/ChatInput';
+import Chat from '../components/Chat';
 
 import Button from '../components/Button';
 import toast, { Toaster } from 'react-hot-toast';
@@ -21,9 +20,6 @@ const MeetingPage = () => {
   const [peers, setPeers] = useState({});
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
-
-  const chatHandler = useRef(null);
-  const [chatHistory, setChatHistory] = useState([]);
 
   const initializeMeeting = () => {
     if (!username) {
@@ -47,10 +43,8 @@ const MeetingPage = () => {
       console.error(error);
       navigate('/');
       toast.error(error.message);
-    }
+    };
 
-    chatHandler.current = new ChatHandler(meeting_id, username, socketRef.current, setChatHistory, errorHandler);
-    chatHandler.current.initialize();
     rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, setPeers, errorHandler);
     rtcHandler.current.initialize();
   };
@@ -61,16 +55,14 @@ const MeetingPage = () => {
     return () => {
       rtcHandler.current.cleanup();
       socketRef.current.disconnect();
-    }
+    };
   }, []);
 
   const toggleMute = () => {
     setIsMuted(prevState => {
       const newMutedState = !prevState;
-      // Mute or unmute the audio track in the local stream
       if (rtcHandler.current && rtcHandler.current.localStream) {
         rtcHandler.current.localStream.getAudioTracks().forEach(track => {
-          console.log(track);
           track.enabled = !newMutedState;
         });
       }
@@ -81,34 +73,14 @@ const MeetingPage = () => {
   const toggleVideo = () => {
     setIsVideoOff(prevState => {
       const newVideoState = !prevState;
-      // Turn on or off the video track in the local stream
       if (rtcHandler.current && rtcHandler.current.localStream) {
         rtcHandler.current.localStream.getVideoTracks().forEach(track => {
-          console.log(track);
           track.enabled = !newVideoState;
         });
       }
       return newVideoState;
     });
   };
-
-  const handleSendMessage = useCallback((message) => {
-    if (!message.trim()) {
-      toast.error('Please enter a message before sending.');
-      return;
-    }
-    chatHandler.current.sendMessage(message);
-    setChatHistory(prevHistory => [...prevHistory, { sender: username, text: message }]);
-  }, [username]);
-  
-
-  const getProfilePicture = (name) => {
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
-  };
-
-  if (!username || !rtcHandler.current) {
-    return null;
-  }
 
   const VideoElement = React.memo(({ stream, muted, peerName }) => {
     const videoRef = useRef();
@@ -121,29 +93,15 @@ const MeetingPage = () => {
 
     return (
       <div className="video-container">
-        <video ref={videoRef} autoPlay playsInline muted={muted} className="video-element"/>
+        <video ref={videoRef} autoPlay playsInline muted={muted} className="video-element" />
         <p className="video-username">{peerName}</p>
       </div>
     );
   });
 
-  const ChatMessages = React.memo(({ chatHistory }) => (
-    <div className="flex-1 overflow-y-auto mb-4">
-      {chatHistory.map((msg, index) => (
-        <div key={index} className="mb-2 flex items-center">
-          <img 
-            src={getProfilePicture(msg.sender)} 
-            alt={`${msg.sender}'s avatar`} 
-            className="w-8 h-8 rounded-full mr-2"
-          />
-          <div>
-            <strong>{msg.sender}:</strong> {msg.text}
-          </div>
-        </div>
-      ))}
-    </div>
-  ));
-  
+  if (!username || !rtcHandler.current) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
@@ -154,23 +112,21 @@ const MeetingPage = () => {
       </header>
       <main className="flex flex-1 overflow-hidden">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-          <VideoElement stream={rtcHandler.current.localStream} muted={true} peerName="You" />
+          {rtcHandler.current.localStream && (
+            <VideoElement stream={rtcHandler.current.localStream} muted={true} peerName="You" />
+          )}
           {Object.entries(peers).map(([peerUsername, peer]) => (
             peerUsername !== username && (
-              <VideoElement 
-                key={peerUsername} 
-                stream={peer.stream} 
-                muted={false} 
+              <VideoElement
+                key={peerUsername}
+                stream={peer.stream}
+                muted={false}
                 peerName={peerUsername}
               />
             )
           ))}
         </div>
-        <div className="w-1/4 bg-white p-4 flex flex-col">
-          <h2 className="text-xl mb-4">Chat</h2>
-          <ChatMessages chatHistory={chatHistory} />
-          <ChatInput onSend={handleSendMessage} />
-        </div>
+        <Chat meeting_id={meeting_id} username={username} socket={socketRef.current} />
       </main>
       <footer className="bg-gray-200 p-4 flex justify-center space-x-4">
         <Button onClick={toggleMute}>{isMuted ? 'Unmute' : 'Mute'}</Button>
