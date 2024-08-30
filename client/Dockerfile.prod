@@ -1,0 +1,18 @@
+FROM node:20.5.0 AS build
+
+WORKDIR /app/client
+
+# install packages
+COPY ./client/package*.json ./
+RUN npm install --from-lock-file
+
+COPY ./client .
+
+RUN npm run build
+
+# serve React app with Nginx
+FROM nginx:alpine
+
+COPY --from=build /app/client/build /usr/share/nginx/html
+
+COPY ./user_conf.d/ /etc/nginx/user_conf.d/

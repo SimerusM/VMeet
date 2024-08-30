@@ -1,0 +1,43 @@
+services:
+  client:
+    build:
+      context: .
+      dockerfile: ./client/Dockerfile.prod
+    container_name: client_build
+
+  api_server:
+    build:
+      context: ./api-server
+      dockerfile: Dockerfile.prod
+    container_name: api_server
+    environment:
+      - PRODUCTION=true
+    ports:
+      - "8073:8080"
+
+  nginx:
+    container_name: nginx
+    image: jonasal/nginx-certbot
+    restart: always
+    environment:
+      - CERTBOT_EMAIL=e256zhan@uwaterloo.ca
+      - CERTBOT_DOMAINS=vmeet.duckdns.org
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - nginx_secrets:/etc/letsencrypt
+      - ./user_conf.d:/etc/nginx/user_conf.d
+      - ./client/build:/usr/share/nginx/html
+    depends_on:
+      - api_server
+      - client
+    networks:
+      - app_network
+
+volumes:
+  nginx_secrets:
+
+networks:
+  app_network:
+    driver: bridge

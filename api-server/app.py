@@ -4,6 +4,7 @@ from flask_cors import CORS
 from chat import setup_chat
 from webrtc import setup_webrtc
 import uuid
+import os
 
 # Define log levels and color codes
 DEBUG = 'DEBUG'
@@ -106,7 +107,6 @@ setup_chat(app, socketio, session_storage, log_message)
 setup_webrtc(app, socketio, session_storage, log_message)
 
 if __name__ == '__main__':
-    import os
     if os.getenv('TESTING', True):
         socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
     else:
