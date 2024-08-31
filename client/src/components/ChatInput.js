@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import Button from '../components/Button';
 import PropTypes from 'prop-types';
 
-const ChatInputSection = ({ onSend }) => {
+const ChatInput = ({ onSend }) => {
   const inputRef = useRef();
 
   const handleSendMessage = (e) => {
@@ -27,8 +27,8 @@ const ChatInputSection = ({ onSend }) => {
   );
 };
 
-ChatInputSection.propTypes = {
+ChatInput.propTypes = {
   onSend: PropTypes.func.isRequired,
 };
 
-export default ChatInputSection;
+export default ChatInput;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import RTCHandler from '../services/rtcHandler';
@@ -21,7 +21,10 @@ const MeetingPage = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
 
-  const initializeMeeting = () => {
+  const chatHandler = useRef(null);
+  const [chatHistory, setChatHistory] = useState([]);
+
+  const initializeMeeting = async () => {
     if (!username) {
       toast.error('Please enter a username before joining a meeting.');
       navigate('/');
@@ -39,13 +42,26 @@ const MeetingPage = () => {
       newSocket.emit('join', { meeting_id: meeting_id, username: username });
     });
 
-    const errorHandler = (error) => {
-      console.error(error);
-      navigate('/');
-      toast.error(error.message);
-    };
+    // Fetch chat history manually
+    try {
+      const response = await fetch(`${apiUrl}/api/chat_history/${meeting_id}`);
+      const history = await response.json();
+      console.log('Fetched chat history:', history);
+      setChatHistory(history); // Set the fetched chat history
+    } catch (error) {
+      console.error('Failed to fetch chat history:', error);
+      toast.error('Failed to load chat history');
+    }
 
-    rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, setPeers, errorHandler);
+    // Initialize the ChatHandler after fetching history
+    chatHandler.current = new ChatHandler(meeting_id, username, socketRef.current, setChatHistory);
+    chatHandler.current.initialize();
+
+    const handlePeerUpdate = (update) => {
+      setPeers(prevPeers => ({ ...prevPeers, ...update }));
+      console.debug('Updated peers:', peers);
+    }
+    rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, handlePeerUpdate);
     rtcHandler.current.initialize();
   };
 
@@ -81,6 +97,10 @@ const MeetingPage = () => {
       return newVideoState;
     });
   };
+
+  if (!username || !rtcHandler.current) {
+    return null;
+  }
 
   const VideoElement = React.memo(({ stream, muted, peerName }) => {
     const videoRef = useRef();
@@ -126,7 +146,7 @@ const MeetingPage = () => {
             )
           ))}
         </div>
-        <Chat meeting_id={meeting_id} username={username} socket={socketRef.current} />
+        <Chat chatHandler={chatHandler.current} initialChatHistory={chatHistory} />
       </main>
       <footer className="bg-gray-200 p-4 flex justify-center space-x-4">
         <Button onClick={toggleMute}>{isMuted ? 'Unmute' : 'Mute'}</Button>

@@ -1,44 +1,24 @@
-// src/components/Chat.js
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
-import Button from './Button';
-import ChatHandler from '../services/chatHandler';
 import ChatInput from './ChatInput';
 
-
-const Chat = ({ meeting_id, username, socket }) => {
-  const [chatHistory, setChatHistory] = useState([]);
-  const chatHandler = useRef(null);
-
-  const initializeChat = () => {
-    if (!username) {
-      toast.error('Please enter a username before joining a meeting.');
-      return;
-    }
-
-    const errorHandler = (error) => {
-      console.error(error);
-      toast.error(error.message);
-    }
-
-    // Assuming ChatHandler is a utility to handle the chat logic
-    chatHandler.current = new ChatHandler(meeting_id, username, socket, setChatHistory, errorHandler);
-    chatHandler.current.initialize();
-  };
+const Chat = ({ chatHandler, initialChatHistory }) => {
+  const [chatHistory, setChatHistory] = useState(initialChatHistory);
 
   useEffect(() => {
-    initializeChat();
-  }, [meeting_id, username, socket]);
+    // Setting the listener so that chatHandler can update chatHistory when new messages arrive
+    chatHandler.setChatHistoryListener(setChatHistory);
+  }, [chatHandler]);
 
   const handleSendMessage = useCallback((message) => {
     if (!message.trim()) {
       toast.error('Please enter a message before sending.');
       return;
     }
-    chatHandler.current.sendMessage(message);
-    setChatHistory(prevHistory => [...prevHistory, { sender: username, text: message }]);
-  }, [username]);
+    chatHandler.sendMessage(message);
+    setChatHistory(prevHistory => [...prevHistory, { sender: chatHandler.username, text: message }]);
+  }, [chatHandler]);
 
   const getProfilePicture = (name) => {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
@@ -67,9 +47,8 @@ const Chat = ({ meeting_id, username, socket }) => {
 };
 
 Chat.propTypes = {
-  meeting_id: PropTypes.string.isRequired,
-  username: PropTypes.string.isRequired,
-  socket: PropTypes.object.isRequired,
+  chatHandler: PropTypes.object.isRequired,
+  initialChatHistory: PropTypes.array.isRequired,
 };
 
 export default Chat;
