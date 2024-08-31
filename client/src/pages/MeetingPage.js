@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import RTCHandler from '../services/rtcHandler';
 import Chat from '../components/Chat';
+import ChatHandler from '../services/chatHandler';
 
 import Button from '../components/Button';
 import toast, { Toaster } from 'react-hot-toast';
