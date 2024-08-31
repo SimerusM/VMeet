@@ -25,6 +25,12 @@ const MeetingPage = () => {
   const chatHandler = useRef(null);
   const [chatHistory, setChatHistory] = useState([]);
 
+  const errorHandler = (error) => {
+    console.error(error);
+    navigate('/');
+    toast.error(error.message);
+  }
+
   const initializeMeeting = async () => {
     if (!username) {
       toast.error('Please enter a username before joining a meeting.');
@@ -58,11 +64,7 @@ const MeetingPage = () => {
     chatHandler.current = new ChatHandler(meeting_id, username, socketRef.current, setChatHistory);
     chatHandler.current.initialize();
 
-    const handlePeerUpdate = (update) => {
-      setPeers(prevPeers => ({ ...prevPeers, ...update }));
-      console.debug('Updated peers:', peers);
-    }
-    rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, handlePeerUpdate);
+    rtcHandler.current = new RTCHandler(meeting_id, username, socketRef.current, setPeers, errorHandler);
     rtcHandler.current.initialize();
   };
 
