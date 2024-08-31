@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import ChatHandler from '../services/chatHandler';
 import RTCHandler from '../services/rtcHandler';
+import ChatInput from '../components/ChatInput';
 
 import Button from '../components/Button';
 import toast, { Toaster } from 'react-hot-toast';
@@ -86,15 +87,23 @@ const MeetingPage = () => {
     });
   };
 
-  const sendMessage = (e) => {
-    e.preventDefault();
+  // const sendMessage = (e) => {
+  //   e.preventDefault();
+  //   if (!message.trim()) {
+  //     toast.error('Please enter a message before sending.');
+  //     return;
+  //   }
+  //   chatHandler.current.sendMessage(message);
+  //   setMessage('');
+  // };
+  const handleSendMessage = useCallback((message) => {
     if (!message.trim()) {
       toast.error('Please enter a message before sending.');
       return;
     }
     chatHandler.current.sendMessage(message);
-    setMessage('');
-  };
+    setChatHistory(prevHistory => [...prevHistory, { sender: username, text: message }]);
+  }, [username]);
 
   const getProfilePicture = (name) => {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
@@ -156,7 +165,8 @@ const MeetingPage = () => {
               </div>
             ))}
           </div>
-          <form onSubmit={sendMessage} className="flex">
+          <ChatInput onSend={handleSendMessage} />
+          {/* <form onSubmit={sendMessage} className="flex">
             <input
               type="text"
               value={message}
@@ -165,7 +175,7 @@ const MeetingPage = () => {
               placeholder="Type a message..."
             />
             <Button type="submit" className="rounded-l-none">Send</Button>
-          </form>
+          </form> */}
         </div>
       </main>
       <footer className="bg-gray-200 p-4 flex justify-center space-x-4">
