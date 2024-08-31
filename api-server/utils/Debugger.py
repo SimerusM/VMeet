@@ -30,9 +30,18 @@ class Debugger:
 
     @staticmethod
     def log_message(level: str, message: str, meeting=''):
-        '''
-        Dev Function to standardize different types of logs
-        '''
+        """
+        Logs a message with a specified level and optional meeting identifier.
+
+        This method standardizes log output across the application, applying
+        consistent formatting and color-coding based on the log level.
+
+        Parameters:
+        - level (str): The log level. Use Debugger.DEBUG, Debugger.INFO,
+          Debugger.WARNING, Debugger.ERROR, or Debugger.CRITICAL.
+        - message (str): The message to be logged.
+        - meeting (str, optional): An identifier for the meeting context.
+        """
         color_map = {
             Debugger.DEBUG: Debugger.DEBUG_COLOR,
             Debugger.INFO: Debugger.INFO_COLOR,
@@ -47,9 +56,9 @@ class Debugger:
     
     @staticmethod
     def log_transport():
-        '''
+        """
         Dev Function to log the transport method used in the connections
-        '''
+        """
         transport = request.args.get('transport', 'unknown')
-        Debugger.log_message('DEBUG', f'Connection transport: {transport}')
+        Debugger.log_message(Debugger.DEBUG, f'Connection transport: {transport}')
 

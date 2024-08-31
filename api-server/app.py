@@ -5,6 +5,7 @@ from chat import setup_chat
 from webrtc import setup_webrtc
 import uuid
 from utils.Debugger import Debugger
+from utils.RateLimiter import RateLimiter
 
 app = Flask(__name__)
 CORS(app)
@@ -12,6 +13,9 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 # In-memory storage for each session
 session_storage = {}
+
+# Central RateLimiter
+rate_limiter = RateLimiter(max_chat_requests_per_user=5, max_users_per_meeting=7, rate_limit_time_window=5)
 
 # Setup routes and sockets
 @app.route('/api/create-meeting', methods=['POST'])
@@ -30,6 +34,7 @@ def create_meeting():
         'users': {}, # {username: sid}
         'chat_history': [] # [{sender: username, text: message}]
     }
+
     Debugger.log_message('INFO', f'User {username} created a new meeting', meeting_id)
     return jsonify({'meeting_id': meeting_id})
 
@@ -58,6 +63,9 @@ def handle_join(data):
     session = session_storage[meeting_id]
     session['users'][username] = request.sid
 
+    # Update rate limiter meta data
+    rate_limiter.updateMeetingCount(meeting_id, "join")
+
     Debugger.log_message('INFO', f'User {username} joined the meeting', meeting_id)
     emit('user_joined', {'username': username, 'meeting_id': meeting_id}, room=meeting_id)
 
@@ -71,12 +79,16 @@ def handle_disconnect():
             if len(session['users']) == 0:
                 to_delete.append(meeting_id)
             Debugger.log_message('INFO', f'User {request.sid} left the meeting', meeting_id)
+
+            # Update rate limiter meta data
+            rate_limiter.updateMeetingCount(meeting_id, "leave")
+
             emit('user_left', {'meeting_id': meeting_id, 'username': username}, room=meeting_id)
 
     for meeting_id in to_delete:
         del session_storage[meeting_id]
 
-setup_chat(app, socketio, session_storage, Debugger.log_message)
+setup_chat(app, socketio, session_storage, Debugger.log_message, rate_limiter)
 setup_webrtc(app, socketio, session_storage, Debugger.log_message)
 
 if __name__ == '__main__':
