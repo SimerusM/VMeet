@@ -1,15 +1,6 @@
 from flask import request
 from flask_socketio import emit
-
-class DebugTools:
-    @staticmethod
-    def log_transport(self):
-        '''
-        Dev Function to log the transport method used in the WebSocket connection.
-        '''
-        transport = request.args.get('transport', 'unknown')
-        self.log_message('DEBUG', f'Connection transport: {transport}')
-
+from utils.Debugger import Debugger
 
 def setup_webrtc(app, socketio, session_storage, log_message):
 
