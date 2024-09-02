@@ -1,19 +1,20 @@
 from flask import request
 
-"""
-Usage Guide:
-------------
-Debugger.<method_name>(<parameters>)
-
-Examples:
-- Debugger.log_message(Debugger.INFO, "User logged in")
-- Debugger.log_transport()
-
-Available methods:
-- log_message(level: str, message: str, meeting: str = '')
-- log_transport()
-"""
 class Debugger:
+    """
+    Usage Guide:
+    ------------
+    Debugger.<method_name>(<parameters>)
+
+    Examples:
+    - Debugger.log_message(Debugger.INFO, "User logged in")
+    - Debugger.log_transport()
+
+    Available methods:
+    - log_message(level: str, message: str, meeting: str = '')
+    - log_transport()
+    """
+
     # Define log levels and color codes
     DEBUG = 'DEBUG'
     INFO = 'INFO'

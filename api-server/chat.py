@@ -23,8 +23,10 @@ def setup_chat(app, socketio, session_storage, log_message, rate_limiter):
         isRateLimited = rate_limiter.rateLimitChat(sender)
         Debugger.log_message(Debugger.DEBUG, f"isRateLimited: {isRateLimited}")
         if isRateLimited:
-            # TODO: User is rate-limited - handle this case
+            Debugger.log_message(Debugger.DEBUG, "Rate limited")
+            emit('chat_message', {'rate_limited': True}, to=request.sid)
             return
+        
         Debugger.log_message(Debugger.DEBUG, "trace 1")
         session_storage[meeting_id]['chat_history'].append({'sender': sender, 'text': message})
         log_message('INFO', f'User {sender} sent: {message}', meeting_id)

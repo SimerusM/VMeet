@@ -16,6 +16,14 @@ const Chat = ({ chatHandler, initialChatHistory }) => {
       toast.error('Please enter a message before sending.');
       return;
     }
+  
+    // Check if the user is rate-limited
+    if (chatHandler.rateLimited) {
+      toast.error('You are currently rate-limited and cannot send messages.');
+      return;
+    }
+
+    // Send the message if not rate-limited
     chatHandler.sendMessage(message);
     setChatHistory(prevHistory => [...prevHistory, { sender: chatHandler.username, text: message }]);
   }, [chatHandler]);
