@@ -62,7 +62,32 @@ class RTCHandler {
     }
 
     const pc = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      iceServers: [
+        {
+          urls: "stun:stun.relay.metered.ca:80",
+        },
+        {
+          urls: "turn:global.relay.metered.ca:80",
+          username: process.env.REACT_APP_TURN_SERVER_USERNAME,
+          credential: process.env.REACT_APP_TURN_SERVER_CREDENTIALS,
+        },
+        {
+          urls: "turn:global.relay.metered.ca:80?transport=tcp",
+          username: process.env.REACT_APP_TURN_SERVER_USERNAME,
+          credential: process.env.REACT_APP_TURN_SERVER_CREDENTIALS,
+        },
+        {
+          urls: "turn:global.relay.metered.ca:443",
+          username: process.env.REACT_APP_TURN_SERVER_USERNAME,
+          credential: process.env.REACT_APP_TURN_SERVER_CREDENTIALS,
+        },
+        {
+          urls: "turns:global.relay.metered.ca:443?transport=tcp",
+          username: process.env.REACT_APP_TURN_SERVER_USERNAME,
+          credential: process.env.REACT_APP_TURN_SERVER_CREDENTIALS,
+        },
+        { urls: 'stun:stun.l.google.com:19302' },
+      ]
     });
 
     pc.onicecandidate = (event) => this.handleICECandidateEvent(event, peerUsername);

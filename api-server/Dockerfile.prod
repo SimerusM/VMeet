@@ -5,8 +5,7 @@ WORKDIR /app/server
 # install packages
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install gunicorn gevent gevent-websocket
-# ^^ probably want to version
+RUN pip install gunicorn==23.0.0 gevent==24.2.1 gevent-websocket==0.10.1
 
 COPY . .
 
