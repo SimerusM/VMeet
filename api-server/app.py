@@ -48,6 +48,9 @@ def get_session(meeting_id):
 def get_users(meeting_id):
     if meeting_id not in session_storage:
         return jsonify({'error': 'Meeting ID not found'}), 404
+    if len(session_storage[meeting_id]['users']) > 7:
+        return jsonify({'error': 'Meeting is full'}), 404
+    
     return jsonify(list(session_storage[meeting_id]['users'].keys()))
 
 @socketio.on('join')
