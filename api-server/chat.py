@@ -1,15 +1,18 @@
 from flask import jsonify, request
 from flask_socketio import emit
+from utils.Debugger import Debugger
 
 def setup_chat(app, socketio, session_storage, log_message):
     @app.route('/api/chat_history/<meeting_id>', methods=['GET'])
     def get_chat_history(meeting_id):
+        Debugger.log_message('DEBUG', f'{session_storage}')
         if meeting_id not in session_storage:
             return jsonify({'error': 'Meeting ID not found'}), 404
         return jsonify(session_storage[meeting_id]['chat_history'])
 
     @socketio.on('chat_message')
     def handle_chat_message(data):
+        Debugger.log_message('DEBUG', f'{session_storage}')
         meeting_id = data['meeting_id']
         sender = data['sender']
         message = data['text']
