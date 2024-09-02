@@ -9,7 +9,10 @@ from utils.Debugger import Debugger
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent', manage_session=False)
+if os.getenv('PRODUCTION', True):
+    socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent', manage_session=False)
+else:
+    socketio = SocketIO(app, cors_allowed_origins="*", manage_session=False)
 
 # In-memory storage for each session
 session_storage = {}
@@ -87,7 +90,7 @@ setup_webrtc(app, socketio, session_storage, Debugger.log_message)
 if __name__ == '__main__':
     if os.getenv('TESTING', True):
         socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
-    elif os.getenv('PRODUCTION', False):
-        socketio.run(app, debug=True)
-    else:
+    elif os.getenv('PRODUCTION', True):
         socketio.run(app, async_mode='gevent')
+    else:
+        socketio.run(app, debug=True)
