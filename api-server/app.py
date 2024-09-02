@@ -9,10 +9,7 @@ from utils.Debugger import Debugger
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
-if os.getenv('PRODUCTION', True):
-    socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent', manage_session=False)
-else:
-    socketio = SocketIO(app, cors_allowed_origins="*", manage_session=False)
+socketio = SocketIO(app, cors_allowed_origins="*", manage_session=False)
 
 # In-memory storage for each session
 session_storage = {}
