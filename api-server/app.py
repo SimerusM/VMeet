@@ -4,11 +4,12 @@ from flask_cors import CORS
 from chat import setup_chat
 from webrtc import setup_webrtc
 import uuid
+import os
 from utils.Debugger import Debugger
 
 app = Flask(__name__)
-CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+CORS(app, supports_credentials=True)
+socketio = SocketIO(app, cors_allowed_origins="*", manage_session=False)
 
 # In-memory storage for each session
 session_storage = {}
@@ -35,18 +36,21 @@ def create_meeting():
 
 @app.route('/api/session/<meeting_id>', methods=['GET'])
 def get_session(meeting_id):
+    Debugger.log_message('DEBUG', f'{session_storage}')
     if meeting_id not in session_storage:
         return jsonify({'error': 'Meeting ID not found'}), 404
     return jsonify(session_storage[meeting_id])
 
 @app.route('/api/users/<meeting_id>', methods=['GET'])
 def get_users(meeting_id):
+    Debugger.log_message('DEBUG', f'{session_storage}')
     if meeting_id not in session_storage:
         return jsonify({'error': 'Meeting ID not found'}), 404
     return jsonify(list(session_storage[meeting_id]['users'].keys()))
 
 @socketio.on('join')
 def handle_join(data):
+    Debugger.log_message('DEBUG', f'{session_storage}')
     if 'username' not in data or 'meeting_id' not in data:
         Debugger.log_message('ERROR', f'Join request missing username or meeting ID: {data}')
         emit('error', {'message': 'Missing username or meeting ID'}, to=request.sid)
@@ -59,6 +63,7 @@ def handle_join(data):
     session['users'][username] = request.sid
 
     Debugger.log_message('INFO', f'User {username} joined the meeting', meeting_id)
+    Debugger.log_message('DEBUG', f'{session_storage}')
     emit('user_joined', {'username': username, 'meeting_id': meeting_id}, room=meeting_id)
 
 @socketio.on('disconnect')
@@ -80,8 +85,9 @@ setup_chat(app, socketio, session_storage, Debugger.log_message)
 setup_webrtc(app, socketio, session_storage, Debugger.log_message)
 
 if __name__ == '__main__':
-    import os
     if os.getenv('TESTING', True):
         socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
+    elif os.getenv('PRODUCTION', True):
+        socketio.run(app, async_mode='gevent')
     else:
         socketio.run(app, debug=True)
