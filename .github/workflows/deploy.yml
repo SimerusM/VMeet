@@ -22,6 +22,7 @@ jobs:
             User $SSH_USER
             IdentityFile ~/.ssh/deploy-key.pem
             StrictHostKeyChecking no
+            Port $SSH_PORT
           END
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
