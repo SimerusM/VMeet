@@ -39,7 +39,7 @@ const MeetingPage = () => {
     }
 
     console.log(`Joining meeting with ID: ${meeting_id}`);
-    toast.success(`Joining the meeting`);
+    toast.success(`Joining the meeting...`);
 
     const newSocket = io(apiUrl);
     socketRef.current = newSocket;
