@@ -32,5 +32,10 @@ jobs:
       - name: Run deployment script on project root directory
         run: ssh my-vps 'cd ${{ secrets.PROJECT_ROOT }} && git fetch && git pull && ./prod.sh'
 
-      - name: Discord notification
+      - name: Notify Discord of Success
+        if: success()
         run: curl -s -X POST "${{ secrets.DISCORD_WEBHOOK }}" -d "content=🚀 Deployment Successful"
+
+      - name: Notify Discord of Failure
+        if: failure()
+        run: curl -s -X POST "${{ secrets.DISCORD_WEBHOOK }}" -d "content=❌ Deployment Failed"
