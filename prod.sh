@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export REACT_APP_API_URL="https://vmeet.duckdns.org"
+export REACT_APP_API_URL="https://vmeet.ericzhang.tech"
 export PRODUCTION="true"
 
 (cd client && rm -rf build && npm run build)
