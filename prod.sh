@@ -3,7 +3,7 @@
 export REACT_APP_API_URL="https://vmeet.ericzhang.tech"
 export PRODUCTION="true"
 
-(cd client && rm -rf build && npm run build)
+(cd client && rm -rf build && npm i && npm run build)
 
 DOWN_COMMAND="down --remove-orphans"
 if command -v docker-compose &> /dev/null; then
