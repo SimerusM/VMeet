@@ -102,7 +102,5 @@ setup_webrtc(app, socketio, session_storage, Debugger.log_message)
 if __name__ == '__main__':
     if os.getenv('TESTING', True):
         socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
-    elif os.getenv('PRODUCTION', True):
-        socketio.run(app, async_mode='gevent')
     else:
         socketio.run(app, debug=True)
