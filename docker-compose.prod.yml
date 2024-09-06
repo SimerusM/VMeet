@@ -15,7 +15,7 @@ services:
     restart: always
     environment:
       - CERTBOT_EMAIL=e256zhan@uwaterloo.ca
-      - CERTBOT_DOMAINS=vmeet.ericzhang.tech
+      - CERTBOT_DOMAINS=meetlh.ericzhang.tech
     ports:
       - 80:80
       - 443:443

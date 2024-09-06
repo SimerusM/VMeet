@@ -58,7 +58,8 @@ const HomePage = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <Toaster position="top-center" reverseOrder={false} />
-      <h1 className="text-4xl font-bold mb-8">Welcome to VMeet</h1>
+      <img style={{ height: '120px' }} className="m-16" src={`${process.env.PUBLIC_URL}/logo.png`} alt="MLH Logo"/>
+      <h1 className="text-4xl font-bold mb-8">Welcome to MeetLH</h1>
       <div className="w-full max-w-md">
         <Input
           type="text"

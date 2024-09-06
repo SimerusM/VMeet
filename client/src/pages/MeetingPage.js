@@ -130,8 +130,13 @@ const MeetingPage = () => {
     <div className="flex flex-col h-screen bg-gray-100">
       <Toaster position="top-center" reverseOrder={false} />
       <header className="bg-blue-600 text-white p-4">
-        <h1 className="text-2xl">Meeting: {meeting_id}</h1>
-        <p>Welcome, {username}!</p>
+        <div className="flex flex-row justify-between items-center">
+          <div>
+            <h1 className="text-2xl">{meeting_id}</h1>
+            <p>Welcome, {username}!</p>
+          </div>
+          <img style={{ height: '60px' }} className="m-4" src={`${process.env.PUBLIC_URL}/logo.png`} alt="MLH Logo"/>
+        </div>
       </header>
       <main className="flex flex-1 overflow-hidden">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">

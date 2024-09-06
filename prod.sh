@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export REACT_APP_API_URL="https://vmeet.ericzhang.tech"
+export REACT_APP_API_URL="https://meetlh.ericzhang.tech"
 export PRODUCTION="true"
 
 (cd client && rm -rf build && npm i && npm run build)
